@@ -15,3 +15,13 @@ It provides a simple environment to experiment with Codex automation and tasks.
    ```
 3. Explore the repository and try running Codex commands.
 
+
+## Running hello.py
+
+To execute the `hello.py` script, run the following command from the project root:
+
+```bash
+python hello.py
+```
+
+The program will prompt for your name and greet you.
