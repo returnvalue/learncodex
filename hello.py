@@ -1,6 +1,6 @@
-def greet_user():
+def greet_user() -> None:
     """Prompt for a user's name and greet them."""
-    name = input("What is your name? ")
+    name: str = input("What is your name? ")
     print(f"Hello, {name}!")
 
 
