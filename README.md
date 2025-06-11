@@ -25,3 +25,14 @@ python hello.py
 ```
 
 The program will prompt for your name and greet you.
+
+## Testing
+
+This project uses **pytest** for its test suite. To run the tests:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+Running `pytest` from the project root will execute all tests in the `tests/` directory and report the results.
