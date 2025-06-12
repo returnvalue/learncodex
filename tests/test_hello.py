@@ -26,3 +26,14 @@ def test_greet_user(monkeypatch, capsys):
     greet_user()
     captured = capsys.readouterr()
     assert captured.out.strip() == 'Hello, Alice!'
+
+
+def test_greet_user_empty_then_valid(monkeypatch, capsys):
+    """Ensure greet_user reprompts when given an empty name."""
+    responses = iter(['', 'Bob'])
+    monkeypatch.setattr('builtins.input', lambda _='': next(responses))
+    greet_user()
+    captured = capsys.readouterr()
+    output_lines = [line.strip() for line in captured.out.splitlines() if line.strip()]
+    assert output_lines[-1] == 'Hello, Bob!'
+    assert 'Please enter a valid name.' in output_lines
