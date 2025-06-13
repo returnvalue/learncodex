@@ -37,3 +37,17 @@ def test_greet_user_empty_then_valid(monkeypatch, capsys):
     output_lines = [line.strip() for line in captured.out.splitlines() if line.strip()]
     assert output_lines[-1] == 'Hello, Bob!'
     assert 'Please enter a valid name.' in output_lines
+
+def test_hello_script_empty_then_valid(tmp_path):
+    """Ensure the script reprompts on empty input."""
+    script = Path(__file__).resolve().parents[1] / 'hello.py'
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        input='\nBob\n',
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    assert output_lines[-1].endswith('Hello, Bob!')
+    assert 'Please enter a valid name.' in result.stdout
