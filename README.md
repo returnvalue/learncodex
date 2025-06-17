@@ -24,7 +24,17 @@ To execute the `hello.py` script, run the following command from the project roo
 python hello.py
 ```
 
-The program will prompt for your name and greet you.
+The program will prompt for your name and greet you. By default it uses the
+prefix `"Hello"` but you can customise this by creating a `config.json` file in
+the working directory containing a `greeting_prefix` entry. For example:
+
+```json
+{
+  "greeting_prefix": "Welcome"
+}
+```
+
+With this configuration, running `hello.py` will greet you with "Welcome".
 
 ## Testing
 

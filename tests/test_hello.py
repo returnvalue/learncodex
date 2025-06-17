@@ -51,3 +51,29 @@ def test_hello_script_empty_then_valid(tmp_path):
     output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     assert output_lines[-1].endswith('Hello, Bob!')
     assert 'Please enter a valid name.' in result.stdout
+
+
+def test_greet_user_custom_prefix_from_config(monkeypatch, capsys, tmp_path):
+    """greet_user should read prefix from config.json when provided."""
+    (tmp_path / 'config.json').write_text('{"greeting_prefix": "Welcome"}')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('builtins.input', lambda _='': 'Charlie')
+    greet_user()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == 'Welcome, Charlie!'
+
+
+def test_hello_script_uses_config(tmp_path):
+    """Ensure hello.py uses greeting prefix from config.json."""
+    cfg = tmp_path / 'config.json'
+    cfg.write_text('{"greeting_prefix": "Hi"}')
+    script = Path(__file__).resolve().parents[1] / 'hello.py'
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        input='Dana\n',
+        text=True,
+        capture_output=True,
+        check=True,
+        cwd=tmp_path,
+    )
+    assert result.stdout.strip().endswith('Hi, Dana!')
