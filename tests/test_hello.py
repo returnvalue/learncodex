@@ -2,22 +2,32 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(PROJECT_ROOT))
+
 from hello import greet_user
 
 
-def test_hello_script(tmp_path):
-    script = Path(__file__).resolve().parents[1] / 'hello.py'
-    result = subprocess.run(
+def run_hello_script(input_text: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    """Execute hello.py with *input_text* and return the completed process."""
+
+    script = PROJECT_ROOT / "hello.py"
+    return subprocess.run(
         [sys.executable, str(script)],
-        input='Tester\n',
+        input=input_text,
         text=True,
         capture_output=True,
         check=True,
+        cwd=cwd,
     )
+
+
+def test_hello_script():
+    result = run_hello_script('Tester\n')
     # The program first prompts for the user's name and then prints the greeting.
     # We only care that the greeting appears at the end of the output.
-    assert result.stdout.strip().endswith('Hello, Tester!')
+    output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    assert output_lines[-1].endswith('Hello, Tester!')
 
 
 def test_greet_user(monkeypatch, capsys):
@@ -40,14 +50,7 @@ def test_greet_user_empty_then_valid(monkeypatch, capsys):
 
 def test_hello_script_empty_then_valid(tmp_path):
     """Ensure the script reprompts on empty input."""
-    script = Path(__file__).resolve().parents[1] / 'hello.py'
-    result = subprocess.run(
-        [sys.executable, str(script)],
-        input='\nBob\n',
-        text=True,
-        capture_output=True,
-        check=True,
-    )
+    result = run_hello_script('\nBob\n')
     output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     assert output_lines[-1].endswith('Hello, Bob!')
     assert 'Please enter a valid name.' in result.stdout
@@ -63,17 +66,12 @@ def test_greet_user_custom_prefix_from_config(monkeypatch, capsys, tmp_path):
     assert captured.out.strip() == 'Welcome, Charlie!'
 
 
-def test_hello_script_uses_config(tmp_path):
-    """Ensure hello.py uses greeting prefix from config.json."""
-    cfg = tmp_path / 'config.json'
-    cfg.write_text('{"greeting_prefix": "Hi"}')
-    script = Path(__file__).resolve().parents[1] / 'hello.py'
-    result = subprocess.run(
-        [sys.executable, str(script)],
-        input='Dana\n',
-        text=True,
-        capture_output=True,
-        check=True,
-        cwd=tmp_path,
-    )
-    assert result.stdout.strip().endswith('Hi, Dana!')
+def test_hello_script_prefers_config_prefix(tmp_path):
+    """Ensure hello.py uses the greeting prefix provided by config.json."""
+
+    prefix = 'Greetings'
+    (tmp_path / 'config.json').write_text('{"greeting_prefix": "Greetings"}')
+    result = run_hello_script('Dana\n', cwd=tmp_path)
+    output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    assert output_lines[-1].endswith(f'{prefix}, Dana!')
+    assert 'Hello, Dana!' not in result.stdout
