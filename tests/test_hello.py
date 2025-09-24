@@ -8,12 +8,19 @@ sys.path.append(str(PROJECT_ROOT))
 from hello import greet_user
 
 
-def run_hello_script(input_text: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def run_hello_script(
+    input_text: str,
+    args: list[str] | None = None,
+    cwd: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
     """Execute hello.py with *input_text* and return the completed process."""
 
     script = PROJECT_ROOT / "hello.py"
+    command = [sys.executable, str(script)]
+    if args:
+        command.extend(args)
     return subprocess.run(
-        [sys.executable, str(script)],
+        command,
         input=input_text,
         text=True,
         capture_output=True,
@@ -56,6 +63,15 @@ def test_hello_script_empty_then_valid(tmp_path):
     assert 'Please enter a valid name.' in result.stdout
 
 
+def test_cli_name_skips_prompt():
+    """Providing --name should avoid prompting for input."""
+
+    result = run_hello_script('', ['--name', 'Eve'])
+    output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    assert output_lines[-1] == 'Hello, Eve!'
+    assert 'What is your name?' not in result.stdout
+
+
 def test_greet_user_custom_prefix_from_config(monkeypatch, capsys, tmp_path):
     """greet_user should read prefix from config.json when provided."""
     (tmp_path / 'config.json').write_text('{"greeting_prefix": "Welcome"}')
@@ -75,3 +91,16 @@ def test_hello_script_prefers_config_prefix(tmp_path):
     output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     assert output_lines[-1].endswith(f'{prefix}, Dana!')
     assert 'Hello, Dana!' not in result.stdout
+
+
+def test_cli_overrides_config_prefix(tmp_path):
+    """Command-line prefix should override config.json values."""
+
+    (tmp_path / 'config.json').write_text('{"greeting_prefix": "Hi"}')
+    result = run_hello_script(
+        '',
+        ['--name', 'Frank', '--greeting-prefix', 'Salutations'],
+        cwd=tmp_path,
+    )
+    output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    assert output_lines[-1] == 'Salutations, Frank!'

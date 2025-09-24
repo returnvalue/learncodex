@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 from pathlib import Path
@@ -21,25 +22,55 @@ def load_config(config_path: Path | str = "config.json") -> dict:
     return {}
 
 
-def greet_user(prefix: str | None = None, config_path: Path | str = "config.json") -> None:
+def greet_user(
+    prefix: str | None = None,
+    name: str | None = None,
+    config_path: Path | str = "config.json",
+) -> None:
     """Prompt for a user's name and greet them.
 
-    Continues prompting until a non-empty name is provided.
+    Continues prompting until a non-empty name is provided unless *name* is
+    supplied.
     """
+
     if prefix is None:
         config = load_config(config_path)
         prefix = config.get("greeting_prefix", "Hello")
 
+    if name is not None:
+        name = name.strip()
+        if not name:
+            logger.warning("Provided name is empty after stripping whitespace")
+            print("Please enter a valid name.")
+            return
+        logger.info("User greeted with name: %s", name)
+        print(f"{prefix}, {name}!")
+        return
+
     while True:
-        name: str = input("What is your name? ").strip()
-        if name:
-            logger.info("User greeted with name: %s", name)
+        response: str = input("What is your name? ").strip()
+        if response:
+            logger.info("User greeted with name: %s", response)
+            name = response
             break
         logger.warning("User entered an empty name")
         print("Please enter a valid name.")
     print(f"{prefix}, {name}!")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Greet the user")
+    parser.add_argument("--name", help="Name of the person to greet")
+    parser.add_argument(
+        "--greeting-prefix",
+        dest="greeting_prefix",
+        help="Greeting prefix to use instead of reading from config.json",
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.INFO)
-    greet_user()
+    greet_user(prefix=args.greeting_prefix, name=args.name)
+
+
+if __name__ == "__main__":
+    main()
