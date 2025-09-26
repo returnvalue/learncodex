@@ -104,3 +104,53 @@ def test_cli_overrides_config_prefix(tmp_path):
     )
     output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     assert output_lines[-1] == 'Salutations, Frank!'
+
+
+def test_main_passes_cli_arguments(monkeypatch):
+    """Ensure hello.main forwards CLI args to greet_user."""
+
+    captured: dict[str, str | None] = {}
+
+    def fake_greet_user(
+        prefix: str | None = None,
+        name: str | None = None,
+        config_path: str | Path = 'config.json',
+    ) -> None:
+        captured['prefix'] = prefix
+        captured['name'] = name
+        captured['config_path'] = str(config_path)
+
+    monkeypatch.setattr('hello.greet_user', fake_greet_user)
+    monkeypatch.setattr(
+        sys,
+        'argv',
+        ['hello.py', '--name', 'Zoe', '--greeting-prefix', 'Hola'],
+    )
+
+    from hello import main
+
+    main()
+
+    assert captured['name'] == 'Zoe'
+    assert captured['prefix'] == 'Hola'
+    assert captured['config_path'].endswith('config.json')
+
+
+def test_main_cli_overrides_config(monkeypatch, capsys, tmp_path):
+    """hello.main should honour CLI arguments even when config.json exists."""
+
+    (tmp_path / 'config.json').write_text('{"greeting_prefix": "Config"}')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        'argv',
+        ['hello.py', '--name', 'Ivy', '--greeting-prefix', 'Salute'],
+    )
+
+    from hello import main
+
+    main()
+
+    captured = capsys.readouterr()
+    assert 'Salute, Ivy!' in captured.out
+    assert 'Config, Ivy!' not in captured.out
