@@ -1,42 +1,56 @@
 # LearnCodex
 
-LearnCodex is a minimal repository used for learning and testing GitHub's Codex.
-It provides a simple environment to experiment with Codex automation and tasks.
+LearnCodex is a tiny Python project that exists purely for practicing automation
+workflows. The repository contains a single command line program, its tests, and
+a dependency list so you can experiment with running tasks such as executing
+scripts, editing files, and validating changes.
 
-## Getting Started
+## Prerequisites
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   ```
-2. Move into the project directory:
-   ```bash
-   cd learncodex
-   ```
-3. Explore the repository and try running Codex commands.
+* Python 3.10 or newer. The code base uses modern typing syntax (e.g. `str | None`),
+  so earlier versions of Python will not run the script.
+* (Optional) A virtual environment if you prefer to isolate dependencies.
+
+Install the project requirements with:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Project layout
+
+```
+.
+├── hello.py         # Main entry point for greeting users.
+├── requirements.txt # Runtime / test dependencies (pytest only).
+└── tests/           # Automated tests for hello.py.
+```
 
 ## Running `hello.py`
 
-To execute the `hello.py` script, run the following command from the project root:
+Execute the script from the project root:
 
 ```bash
 python hello.py
 ```
 
-The program will prompt for your name and greet you. You can control the greeting
-in two ways:
+By default the program prompts for a name, then prints a greeting using the
+prefix "Hello". You can control both the name and greeting prefix:
 
-* **Configuration file** – Create a `config.json` file in the working directory
-  containing a `greeting_prefix` entry. For example:
+* **Configuration file** – If a `config.json` file exists in the current working
+  directory the script reads a `greeting_prefix` value from it. Example:
+
   ```json
   {
     "greeting_prefix": "Welcome"
   }
   ```
-  When this file is present the greeting will use the configured prefix.
-* **Command-line arguments** – The script accepts optional arguments:
-  * `--name`: supply the name to greet without prompting for input.
-  * `--greeting-prefix`: override both the default and any value provided in
+
+  The configuration file is optional; if it is missing or contains invalid JSON
+  the program falls back to the default prefix.
+* **Command-line arguments** – `hello.py` exposes two optional flags:
+  * `--name`: provide the name to greet without prompting for input.
+  * `--greeting-prefix`: override both the default and any value supplied by
     `config.json`.
 
 Examples:
@@ -52,14 +66,17 @@ python hello.py --name Alice
 python hello.py --greeting-prefix "Salutations"
 ```
 
+If you pass an empty string via `--name` or enter only whitespace when prompted
+the script reminds you to enter a valid name and exits without printing an
+incomplete greeting.
+
 ## Testing
 
-This project uses **pytest** for its test suite. To run the tests:
+The repository uses **pytest** for its tests. From the project root run:
 
 ```bash
-pip install -r requirements.txt
 pytest
 ```
 
-Running `pytest` from the project root will execute all tests in the `tests/`
-directory and report the results.
+This executes the suite in `tests/` and ensures both the command line interface
+and configuration logic behave as expected.
