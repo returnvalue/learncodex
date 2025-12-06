@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+  learncodex:
+    build: .
+    command: ["python", "hello.py"]
+    environment:
+      - GREETING_PREFIX=${GREETING_PREFIX:-Hello}
+    stdin_open: true
+    tty: true

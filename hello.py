@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,9 @@ def greet_user(
     Continues prompting until a non-empty name is provided unless *name* is
     supplied.
     """
+
+    if prefix is None:
+        prefix = os.getenv("GREETING_PREFIX")
 
     if prefix is None:
         config = load_config(config_path)
