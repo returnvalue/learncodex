@@ -106,6 +106,19 @@ def test_cli_overrides_config_prefix(tmp_path):
     assert output_lines[-1] == 'Salutations, Frank!'
 
 
+def test_env_overrides_config_prefix(monkeypatch, tmp_path):
+    """Environment variables should override config values when present."""
+
+    (tmp_path / 'config.json').write_text('{"greeting_prefix": "Config"}')
+    monkeypatch.setenv('GREETING_PREFIX', 'EnvGreeting')
+
+    result = run_hello_script('Grace\n', cwd=tmp_path)
+    output_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+    assert output_lines[-1].endswith('EnvGreeting, Grace!')
+    assert 'Config, Grace!' not in result.stdout
+
+
 def test_main_passes_cli_arguments(monkeypatch):
     """Ensure hello.main forwards CLI args to greet_user."""
 
